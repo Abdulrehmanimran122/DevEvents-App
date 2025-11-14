@@ -30,7 +30,7 @@ const EventSchema = new Schema<IEvent>(
     },
     slug: {
       type: String,
-      unique: true,
+      unique: true, // REMOVE THIS LINE to fix duplicate index
       lowercase: true,
       trim: true,
     },
@@ -120,12 +120,20 @@ EventSchema.pre('save', function (next) {
 
   // Normalize date to ISO format if it's not already
   if (event.isModified('date')) {
-    event.date = normalizeDate(event.date);
+    try {
+      event.date = normalizeDate(event.date);
+    } catch (error) {
+      return next(error as Error);
+    }
   }
 
   // Normalize time format (HH:MM)
   if (event.isModified('time')) {
-    event.time = normalizeTime(event.time);
+    try {
+      event.time = normalizeTime(event.time);
+    } catch (error) {
+      return next(error as Error);
+    }
   }
 
   next();
@@ -178,7 +186,7 @@ function normalizeTime(timeString: string): string {
   return `${hours.toString().padStart(2, '0')}:${minutes}`;
 }
 
-// Create unique index on slug for better performance
+// Create unique index on slug for better performance (KEEP THIS ONE)
 EventSchema.index({ slug: 1 }, { unique: true });
 
 // Create compound index for common queries
